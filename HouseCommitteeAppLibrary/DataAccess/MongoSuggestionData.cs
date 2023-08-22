@@ -75,7 +75,7 @@ public class MongoSuggestionData : ISuggestionData
         _cache.Remove(CacheName);
     }
 
-    public async Task UpvoteSeggestion(string suggestionId, string userId)
+    public async Task UpvoteSuggestion(string suggestionId, string userId)
     {
         /*creating a transaction*/
         var client = _db.Client;

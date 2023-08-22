@@ -9,5 +9,5 @@ public interface ISuggestionData
     Task<SuggestionModel> GetSuggestion(string id);
     Task<List<SuggestionModel>> GetUsersSuggestionsAsync(string userId);
     Task UpdateSuggestion(SuggestionModel suggestion);
-    Task UpvoteSeggestion(string suggestionId, string userId);
+    Task UpvoteSuggestion(string suggestionId, string userId);
 }
