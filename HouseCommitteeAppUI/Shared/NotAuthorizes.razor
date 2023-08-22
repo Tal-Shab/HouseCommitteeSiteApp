@@ -1,0 +1,28 @@
+﻿@inject NavigationManager navManager
+
+<div>
+    <div>
+        <div>
+            <div>
+                <div>Authorization Required</div>
+                <p>
+                    You are not Authorized to access this page.
+                    Log in in order to vote or submit suggestions.
+                    Only an admin is allows to manage suggestions.
+                </p>
+            </div>
+            <div>
+                <button @onclick="ClosePage"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    private void ClosePage()
+    {
+        navManager.NavigateTo("/");
+    }
+
+}
