@@ -53,6 +53,30 @@
             </Virtualize>
         }
     </div>
+    <div>
+        @if (categories is not null)
+        {
+            <div>
+                <span>Category</span>
+                <div @onclick="( () => OnCaregoryClick() )">All</div>
+                @foreach (var c in categories)
+                {
+                    <div @onclick="( () => OnCaregoryClick(c.CategoryName))">@c.CategoryName</div>
+                }
+            </div>
+        }
+        @if (statuses is not null)
+        {
+            <div>
+                <span>Status</span>
+                <div @onclick="( () => OnStatusClick() )">All</div>
+                @foreach (var s in statuses)
+                {
+                    <div @onclick="( () => OnStatusClick(s.StatusName))">@s.StatusName</div>
+                }
+            </div>
+        }
+    </div>
 </div>
 
 @code {
