@@ -1,0 +1,95 @@
+﻿@page "/Create"
+
+@using HouseCommitteeAppUI.Components
+@using HouseCommitteeAppUI.Models
+@inject ICategoryData catrgoryData
+@inject ISuggestionData suggestionData
+@inject IUserData userData 
+@inject NavigationManager navManager
+
+<h1>Make A Suggestion</h1>
+<div>
+    <div>
+        <div>
+            <button @onclick="ClosePage"></button>
+        </div>
+        @if (categories is not null)
+        {
+            
+        }
+        <EditForm Model="suggestion" OnValidSubmit="CreateSuggestionAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div>
+                <label for="suggestion-text">Suggestion</label>
+                <div>Focus on the improvment or the malfunction</div>
+                <InputText id="suggestion-text" @bind-Value="suggestion.Suggestion" />
+            </div>
+            <div>
+                <label for="category">Category</label>
+                <div>Choose one category</div>
+                <div>
+                    <MyInputRadioGroup id="category" @bind-Value="suggestion.CategoryId">
+                        @foreach (var c in categories)
+                        {
+                            <div>
+                                <InputRadio Value="@c.Id" id="@c.Id" />
+                                <label for="@c.Id">@c.CategoryName - @c.CategoryDescription</label>
+                            </div>
+                        }
+                    </MyInputRadioGroup>
+                </div>
+            </div>
+            <div>
+                <label for="description">Description</label>
+                <div>Briefly describe youre suggestion</div>
+                <InputTextArea id="description" @bind-Value="suggestion.Description" />
+            </div>
+            <button type="submit">Submit your suggestion</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private CreateSuggestionModel suggestion = new();
+    private List<CategoryModel> categories;
+    private UserModel loggedInUser;
+
+    protected async override Task OnInitializedAsync()
+    {
+        categories = await catrgoryData.GetAllCatrgoriesAsync();
+
+        //TODO - replace with user lookeup once authentication is Implement
+        loggedInUser = await userData.GetUserFromAutenticationAsync("abc-123");
+    }
+
+    private void ClosePage()
+    {
+        navManager.NavigateTo("/");
+    }
+
+    private async Task CreateSuggestionAsync()
+    {
+        SuggestionModel s = new();
+        s.Suggestion = suggestion.Suggestion;
+        s.Description = suggestion.Description;
+        s.Author = new BasicUserModel(loggedInUser);
+        s.Category = categories.Where(c => c.Id == suggestion.CategoryId).FirstOrDefault();
+
+        //should not be null but just in case
+        if( s.Category is null)
+        {
+            suggestion.CategoryId = "";
+            return;
+        }
+
+        await suggestionData.CreateSuggestion(s);
+
+        //wiping out the suggestion
+        suggestion = new();
+        ClosePage();
+
+    }
+
+
+}
