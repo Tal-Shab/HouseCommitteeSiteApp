@@ -7,6 +7,7 @@ public interface ISuggestionData
     Task<List<SuggestionModel>> GetAllSuggestionsAsync();
     Task<List<SuggestionModel>> GetAllSuggestionsWaitingForApprovalAsync();
     Task<SuggestionModel> GetSuggestion(string id);
+    Task<List<SuggestionModel>> GetUsersSuggestionsAsync(string userId);
     Task UpdateSuggestion(SuggestionModel suggestion);
     Task UpvoteSeggestion(string suggestionId, string userId);
 }

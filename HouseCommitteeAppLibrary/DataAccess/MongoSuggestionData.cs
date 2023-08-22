@@ -29,14 +29,27 @@ public class MongoSuggestionData : ISuggestionData
             var result = await _suggestions.FindAsync(s => s.Archived == false);
             output = result.ToList();
 
-            _cache.Set(CacheName, output, TimeSpan.FromHours(1));
-            /*this meand admins will not see a new suggestion for an hour
+            _cache.Set(CacheName, output, TimeSpan.FromMinutes(15));
+            /*this meand admins will not see a new suggestion for 15 minutes
              if this bothers me i will change it to less*/
         }
 
         return output;
     }
 
+    public async Task<List<SuggestionModel>> GetUsersSuggestionsAsync(string userId)
+    {
+        var output = _cache.Get<List<SuggestionModel>>(userId);
+        if (output == null)
+        {
+            var result = await _suggestions.FindAsync(s => s.Author.Id == userId);
+            output = result.ToList();
+
+            _cache.Set(userId, output, TimeSpan.FromMinutes(15));
+        }
+
+        return output;
+    }
     public async Task<List<SuggestionModel>> GetAllApprovedSuggestionsAsync()
     {
         var output = await GetAllSuggestionsAsync();
