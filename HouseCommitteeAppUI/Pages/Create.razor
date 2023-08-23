@@ -1,7 +1,10 @@
 ﻿@page "/Create"
 
+@attribute [Authorize]
+
 @using HouseCommitteeAppUI.Components
 @using HouseCommitteeAppUI.Models
+@inject AuthenticationStateProvider authProvider
 @inject ICategoryData catrgoryData
 @inject ISuggestionData suggestionData
 @inject IUserData userData 
@@ -59,8 +62,10 @@
     {
         categories = await catrgoryData.GetAllCatrgoriesAsync();
 
-        //TODO - replace with user lookeup once authentication is Implement
-        loggedInUser = await userData.GetUserFromAutenticationAsync("abc-123");
+
+        var authState = await authProvider.GetAuthenticationStateAsync();
+        string objectId = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("objectidentifier"))?.Value;
+        loggedInUser = await userData.GetUserFromAutenticationAsync(objectId);
     }
 
     private void ClosePage()

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using HouseCommitteeAppUI;
+using Microsoft.AspNetCore.Rewrite;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +27,23 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
+/*when signing out, we want to go back to the home page instead of being left in a boring page that only signs you out*/
+//TODO : check why the redirection is not working
+app.UseRewriter(
+    new RewriteOptions().Add(
+        context =>
+        {
+            if (context.HttpContext.Request.Path == "/MicrosoftIdentity/Account/SignedOut")
+            {
+                context.HttpContext.Response.Redirect("/");
+            }
+        })
+    );
+
+app.MapControllers();   
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 

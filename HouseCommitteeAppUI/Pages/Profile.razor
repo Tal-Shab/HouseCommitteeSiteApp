@@ -1,4 +1,5 @@
 ﻿@page "/Profile"
+@attribute [Authorize]
 @inject ISuggestionData suggestionData
 @inject IUserData userData
 @inject NavigationManager navManager
@@ -13,7 +14,7 @@
 <div>
     <h2>My Account</h2>
     <p>
-        <a href="#">
+        <a href="/MicrosoftIdentity/Account/EditProfile">
             Edit My Profile
         </a>
     </p>
@@ -68,7 +69,7 @@
 @if (pending?.Count > 0)
 {
     <div>
-        <h2>{Pending Suggestions</h2>
+        <h2>Pending Suggestions</h2>
         <p>These are your suggestions that are waiting for an approval.</p>
 
         @foreach (var s in pending)
