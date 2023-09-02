@@ -1,6 +1,8 @@
 ﻿@page "/Details/{id}"
 @inject ISuggestionData suggestionData
+@inject IUserData userData
 @inject NavigationManager navManager
+@inject AuthenticationStateProvider authProvider
 
 <h1>Suggestion Details</h1>
 
@@ -10,7 +12,7 @@
         {
             <div>
                 <div>
-                    <div>
+                    <div @onclick="VoteUp">
                         <div>@GetUpvoteTopText()</div>
                         <span class="oi oi-caret-top"></span>
                         <div>@GetUpvoteBottomText()</div>
@@ -54,12 +56,13 @@
 @code {
     [Parameter]
     public string Id { get; set; }
-
     private SuggestionModel suggestion;
+    private UserModel loggedInUser;
 
     protected async override Task OnInitializedAsync()
     {
         suggestion = await suggestionData.GetSuggestion(Id);
+        loggedInUser = await authProvider.GetUserFromAuthAsync(userData);
     }
 
     private void ClosePage()
@@ -72,6 +75,10 @@
         if (suggestion.UserVotes?.Count > 0)
         {
             return suggestion.UserVotes.Count.ToString("00");
+        }
+        if (suggestion.Author.Id == loggedInUser?.Id)
+        {
+            return "Awating"; //if the suggestion belong to the logged in user, he will see "Awating upvote"
         }
         else
         {
@@ -88,6 +95,31 @@
         else
         {
             return "Upvote";
+        }
+    }
+
+    private async Task VoteUp()
+    {
+        if (loggedInUser is not null)
+        {
+            if (suggestion.Author.Id == loggedInUser.Id)
+            {
+                //cant vote on your own suggestion
+                return;
+            }
+
+            if (suggestion.UserVotes.Add(loggedInUser.Id) == false)
+            {
+                //duble clicking on the vote button will un-vote
+                suggestion.UserVotes.Remove(loggedInUser.Id);
+            }
+
+            await suggestionData.UpvoteSuggestion(suggestion.Id, loggedInUser.Id);
+        }
+        else
+        {
+            //user needs to be signed in in order to upvote
+            navManager.NavigateTo("/MicrosoftIdentity/Account/SignIn", true);
         }
     }
 
