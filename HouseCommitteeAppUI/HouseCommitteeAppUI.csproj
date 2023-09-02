@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\images\" />
+    <Content Remove="wwwroot\images\small-model-house-with-green-bokeh-background-free-photo.jpg" />
   </ItemGroup>
 
   <ItemGroup>
