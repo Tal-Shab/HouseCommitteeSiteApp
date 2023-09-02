@@ -5,6 +5,7 @@ public class BasicUserModel
     public string Id { get; set; }
     public string FirstName { get; set; }
     public string AppartmentNum { get; set; }
+    public string StreetAddress { get; set; }
 
     public BasicUserModel()
     {
@@ -15,5 +16,6 @@ public class BasicUserModel
         Id = user.Id;
         FirstName = user.FirstName;
         AppartmentNum = user.AppartmentNum;
+        StreetAddress = user.StreetAddress;
     }
 }

@@ -62,10 +62,14 @@
     {
         categories = await catrgoryData.GetAllCatrgoriesAsync();
 
-
+        /*
         var authState = await authProvider.GetAuthenticationStateAsync();
         string objectId = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("objectidentifier"))?.Value;
         loggedInUser = await userData.GetUserFromAutenticationAsync(objectId);
+        */
+
+        loggedInUser = await authProvider.GetUserFromAuthAsync(userData);
+
     }
 
     private void ClosePage()

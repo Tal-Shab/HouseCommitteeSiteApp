@@ -1,5 +1,5 @@
 ﻿@page "/"
-
+@inject AuthenticationStateProvider authProvider
 @inject ICategoryData categoryData
 @inject IStatusData statusData
 @inject IUserData userData
@@ -31,7 +31,7 @@
         {
             <Virtualize Items="@suggestions" Context="s" OverscanCount="10">
                 <div>
-                    <div>
+                    <div @onclick="( () => VoteUp(s) )">
                         <div>@GetUpvoteTopText(s)</div>
                         <span class="oi oi-caret-top"></span>
                         <div>@GetUpvoteBottomText(s)</div>
@@ -80,6 +80,7 @@
 </div>
 
 @code {
+    private UserModel loggedInUser;
     private List<SuggestionModel> suggestions;
     private List<CategoryModel> categories;
     private List<StatusModel> statuses;
@@ -93,8 +94,70 @@
     {
         categories = await categoryData.GetAllCatrgoriesAsync();
         statuses = await statusData.GetAllStatusesAsync();
+        await LoadAndVerifyUserAsync();
+    }
 
-    } 
+    private async Task LoadAndVerifyUserAsync()
+    {
+        var authState = await authProvider.GetAuthenticationStateAsync();
+        string objectId = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("objectidentifier"))?.Value;
+
+        if(string.IsNullOrWhiteSpace(objectId) == false)
+        {
+            loggedInUser = await userData.GetUserFromAutenticationAsync(objectId) ?? new();
+
+            string firstName = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("givenname"))?.Value;
+            string lastName = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("surname"))?.Value;
+            //TODO: try and change apartmentNumber to be stored in its own fiels on azure
+            string apartmentNumber = authState.User.Claims.FirstOrDefault(c => c.Type.Equals("name"))?.Value;
+            string email = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("email"))?.Value;
+            string street = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("streetAddress"))?.Value;
+
+            bool isDirty = false;
+            if  (objectId.Equals(loggedInUser.ObjectIdentifier) == false)
+            {
+                isDirty = true;
+                loggedInUser.ObjectIdentifier = objectId;
+            }
+            if (firstName.Equals(loggedInUser.FirstName) == false)
+            {
+                isDirty = true;
+                loggedInUser.FirstName = firstName;
+            }
+            if (lastName.Equals(loggedInUser.LastName) == false)
+            {
+                isDirty = true;
+                loggedInUser.LastName = lastName;
+            }
+            if (apartmentNumber.Equals(loggedInUser.AppartmentNum) == false)
+            {
+                isDirty = true;
+                loggedInUser.AppartmentNum = apartmentNumber;
+            }
+            if (email.Equals(loggedInUser.EmailAddress) == false)
+            {
+                isDirty = true;
+                loggedInUser.EmailAddress = email;
+            }
+            if (street.Equals(loggedInUser.StreetAddress) == false)
+            {
+                isDirty = true;
+                loggedInUser.StreetAddress = street;
+            }
+
+            if (isDirty)
+            {
+                if (string.IsNullOrWhiteSpace(loggedInUser.Id))
+                {
+                    await userData.CreateUser(loggedInUser);
+                }
+                else
+                {
+                    await userData.UpdateUser(loggedInUser);
+                }
+            }
+        }
+    }
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
     {   
@@ -192,6 +255,38 @@
         await FilterSuggestionsAsync();
     }
 
+    private async Task VoteUp(SuggestionModel suggestion)
+    {
+        if(loggedInUser is not null)
+        {
+            if(suggestion.Author.Id == loggedInUser.Id)
+            {
+                //cant vote on your own suggestion
+                return;
+            }
+
+            if(suggestion.UserVotes.Add(loggedInUser.Id) == false)
+            {
+                //duble clicking on the vote button will un-vote
+                suggestion.UserVotes.Remove(loggedInUser.Id);
+            }
+
+            await suggestionData.UpvoteSuggestion(suggestion.Id, loggedInUser.Id);
+            if( isSortedByNew == false)
+            {
+                //sorted by popularity
+                suggestions = suggestions
+                                .OrderByDescending(s => s.UserVotes.Count)
+                                .ThenByDescending(s => s.DateCreated).ToList();
+            }
+        }
+        else
+        {
+            //user needs to be signed in in order to upvote
+            navManager.NavigateTo("/MicrosoftIdentity/Account/SignIn", true);
+        }
+    }
+
     private string GetUpvoteTopText(SuggestionModel suggestion)
     {
         if( suggestion.UserVotes?.Count > 0)
@@ -200,7 +295,14 @@
         }
         else
         {
-            return "Click To";
+            if (suggestion.Author.Id == loggedInUser?.Id)
+            {
+                return "Awating"; //if the suggestion belong to the logged in user, he will see "Awating upvote" 
+            }
+            else
+            {   
+                return "Click To";
+            }
         }
     }
 

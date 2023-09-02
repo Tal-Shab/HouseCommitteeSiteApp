@@ -1,5 +1,6 @@
 ﻿@page "/Profile"
 @attribute [Authorize]
+@inject AuthenticationStateProvider authProvider
 @inject ISuggestionData suggestionData
 @inject IUserData userData
 @inject NavigationManager navManager
@@ -122,8 +123,7 @@
 
     protected async override Task OnInitializedAsync()
     {
-        //TODO - replace with user lookeup once authentication is Implement
-        loggedInUser = await userData.GetUserFromAutenticationAsync("abc-123");
+        loggedInUser = await authProvider.GetUserFromAuthAsync(userData);
 
         var results = await suggestionData.GetUsersSuggestionsAsync(loggedInUser.Id);
 
